@@ -30,6 +30,7 @@ mod eth_pubsub;
 mod net;
 mod signer;
 mod web3;
+mod tenet;
 
 pub use self::{
 	eth::{format, EstimateGasAdapter, Eth, EthBlockDataCacheTask, EthFilter, EthTask},
@@ -37,10 +38,11 @@ pub use self::{
 	net::Net,
 	signer::{EthDevSigner, EthSigner},
 	web3::Web3,
+	tenet::Tenet,
 };
 pub use ethereum::TransactionV2 as EthereumTransaction;
 pub use fc_rpc_core::{
-	EthApiServer, EthFilterApiServer, EthPubSubApiServer, NetApiServer, Web3ApiServer,
+	EthApiServer, EthFilterApiServer, EthPubSubApiServer, NetApiServer, Web3ApiServer, TenetApiServer,
 };
 pub use fc_storage::{
 	OverrideHandle, RuntimeApiStorageOverride, SchemaV1Override, SchemaV2Override,

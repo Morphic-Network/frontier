@@ -32,6 +32,7 @@ mod sync;
 mod transaction;
 mod transaction_request;
 mod work;
+mod poc;
 
 pub mod pubsub;
 
@@ -56,4 +57,5 @@ pub use self::{
 	transaction::{LocalTransactionStatus, RichRawTransaction, Transaction},
 	transaction_request::{TransactionMessage, TransactionRequest},
 	work::Work,
+	poc::PoC,
 };

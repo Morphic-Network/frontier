@@ -16,18 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod types;
+//! Tenet rpc interface.
 
-mod eth;
-mod eth_pubsub;
-mod net;
-mod web3;
-mod tenet;
+use jsonrpsee::{core::RpcResult as Result, proc_macros::rpc};
+use ethereum_types::H256;
+use crate::types::PoC;
 
-pub use self::{
-	eth::{EthApiServer, EthFilterApiServer},
-	eth_pubsub::EthPubSubApiServer,
-	net::NetApiServer,
-	web3::Web3ApiServer,
-	tenet::TenetApiServer,
-};
+/// Net rpc interface.
+#[rpc(server)]
+pub trait TenetApi {
+	/// Returns poc.
+	#[method(name = "tenet_getPoc")]
+	fn get_poc(&self, tx_id: H256) -> Result<PoC>;
+}

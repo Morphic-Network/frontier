@@ -1,0 +1,20 @@
+[package]
+name = "fp-poc"
+version = "1.0.0"
+license = "Apache-2.0"
+description = "Primitives for tenet poc."
+authors = { workspace = true }
+edition = { workspace = true }
+repository = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sha3 = "*"
+log = "0.4.17"
+ethereum-types = { workspace = true }
+libsecp256k1 = { workspace = true, features = ["static-context", "hmac"] }
+ethereum = { workspace = true, features = ["with-codec"] }
+serde = "*"
+serde_json = "*"
+sp-std = { workspace = true }

@@ -59,7 +59,8 @@ use sp_runtime::{
 use sp_std::{marker::PhantomData, prelude::*};
 
 pub use ethereum::{
-	AccessListItem, BlockV2 as Block, LegacyTransactionMessage, Log, ReceiptV3 as Receipt,
+	AccessListItem, AccessList,
+	BlockV2 as Block, LegacyTransactionMessage, Log, ReceiptV3 as Receipt,
 	TransactionAction, TransactionV2 as Transaction,
 };
 pub use fp_rpc::TransactionStatus;
@@ -337,6 +338,10 @@ pub mod pallet {
 	#[pallet::getter(fn block_hash)]
 	pub(super) type BlockHash<T: Config> = StorageMap<_, Twox64Concat, U256, H256, ValueQuery>;
 
+	// mapping for transaction id and poc.
+	#[pallet::storage]
+	pub type TransactionPoc<T: Config> = StorageMap<_, Twox64Concat, H256, String, ValueQuery>;
+
 	#[pallet::genesis_config]
 	#[derive(Default)]
 	pub struct GenesisConfig {}
@@ -437,6 +442,7 @@ impl<T: Config> Pallet<T> {
 		CurrentReceipts::<T>::put(receipts.clone());
 		CurrentTransactionStatuses::<T>::put(statuses.clone());
 		BlockHash::<T>::insert(block_number, block.header.hash());
+		Self::generate_poc(&transactions);
 
 		match post_log {
 			Some(PostLogContent::BlockAndTxnHashes) => {
@@ -454,6 +460,19 @@ impl<T: Config> Pallet<T> {
 				frame_system::Pallet::<T>::deposit_log(digest);
 			}
 			None => { /* do nothing*/ }
+		}
+	}
+
+	fn generate_poc(transactions: &Vec<Transaction>) {
+		let seed = 0;
+		
+		let private_key = H256::from_slice(&[(seed + 1) as u8; 32]);
+		for transaction in transactions {
+			let poc = fp_poc::generate_poc(
+				private_key,
+				T::ChainId::get(),
+				&vec![fp_poc::IOHash{input_hash: tenet_app::TenetApp::generate_input_hash(transaction), output_hash: H256::zero()}]);
+				TransactionPoc::<T>::insert(transaction.hash(), serde_json::to_string(&poc).unwrap());
 		}
 	}
 

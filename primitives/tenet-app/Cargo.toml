@@ -1,0 +1,16 @@
+[package]
+name = "tenet-app"
+version = "1.0.0"
+license = "Apache-2.0"
+description = "Primitives for tenet app."
+authors = { workspace = true }
+edition = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+sha3 = "*"
+log = "0.4.17"
+ethereum-types = { workspace = true }
+ethereum = { workspace = true, features = ["with-codec"] }
+rlp = { workspace = true }
+fp-poc = { workspace = true }
