@@ -218,6 +218,15 @@ where
 			Err(_) => return Err(internal_err("decode transaction failed")),
 		};
 
+		let pubkey = match crate::public_key(&transaction) {
+			Ok(pubkey) => pubkey,
+			Err(_) => return Err(internal_err("cannot recover public key")),
+		};
+
+		let transaction = transaction.encrypt(|msg, aad| {
+			sp_io::crypto::encrypted(msg, aad.as_fixed_bytes(), &pubkey).unwrap_or_default()
+		});
+
 		let transaction_hash = transaction.hash();
 
 		let block_hash = self.client.info().best_hash;

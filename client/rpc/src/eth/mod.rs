@@ -483,7 +483,7 @@ fn transaction_build(
 			let action = match ethereum_transaction {
 				EthereumTransaction::Legacy(t) => t.action,
 				EthereumTransaction::EIP2930(t) => t.action,
-				EthereumTransaction::EIP1559(t) => t.action,
+				EthereumTransaction::EIP1559(t) => t.action(),
 			};
 			match action {
 				ethereum::TransactionAction::Call(to) => Some(to),

@@ -305,7 +305,7 @@ where
 
 		let receipts = handler.current_receipts(substrate_hash);
 		let is_eip1559 = handler.is_eip1559(substrate_hash);
-
+		
 		match (block, statuses, receipts) {
 			(Some(block), Some(statuses), Some(receipts)) => {
 				let block_hash = H256::from(keccak_256(&rlp::encode(&block.header)));
@@ -381,9 +381,9 @@ where
 						.runtime_api()
 						.gas_price(substrate_hash)
 						.unwrap_or_default()
-						.checked_add(t.max_priority_fee_per_gas)
+						.checked_add(t.max_priority_fee_per_gas())
 						.unwrap_or_else(U256::max_value)
-						.min(t.max_fee_per_gas),
+						.min(t.max_fee_per_gas()),
 				};
 
 				return Ok(Some(Receipt {

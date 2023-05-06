@@ -81,53 +81,19 @@ impl From<TransactionData> for CheckEvmTransactionInput {
 	}
 }
 
-impl From<&Transaction> for TransactionData {
-	fn from(t: &Transaction) -> Self {
-		match t {
-			Transaction::Legacy(t) => TransactionData {
-				action: t.action,
-				input: t.input.clone(),
-				nonce: t.nonce,
-				gas_limit: t.gas_limit,
-				gas_price: Some(t.gas_price),
-				max_fee_per_gas: None,
-				max_priority_fee_per_gas: None,
-				value: t.value,
-				chain_id: t.signature.chain_id(),
-				access_list: Vec::new(),
-			},
-			Transaction::EIP2930(t) => TransactionData {
-				action: t.action,
-				input: t.input.clone(),
-				nonce: t.nonce,
-				gas_limit: t.gas_limit,
-				gas_price: Some(t.gas_price),
-				max_fee_per_gas: None,
-				max_priority_fee_per_gas: None,
-				value: t.value,
-				chain_id: Some(t.chain_id),
-				access_list: t
-					.access_list
-					.iter()
-					.map(|d| (d.address, d.storage_keys.clone()))
-					.collect(),
-			},
-			Transaction::EIP1559(t) => TransactionData {
-				action: t.action,
-				input: t.input.clone(),
-				nonce: t.nonce,
-				gas_limit: t.gas_limit,
-				gas_price: None,
-				max_fee_per_gas: Some(t.max_fee_per_gas),
-				max_priority_fee_per_gas: Some(t.max_priority_fee_per_gas),
-				value: t.value,
-				chain_id: Some(t.chain_id),
-				access_list: t
-					.access_list
-					.iter()
-					.map(|d| (d.address, d.storage_keys.clone()))
-					.collect(),
-			},
+impl TransactionData {
+	pub fn convert(chain_id: Option<u64>, essential: &ethereum::TransactionEssentials) -> Self {
+		Self { 
+			action: essential.action, 
+			input: essential.input.clone(), 
+			nonce: essential.nonce.unwrap_or_default(), 
+			gas_limit: essential.gas_limit, 
+			gas_price: essential.gas_price, 
+			max_fee_per_gas: essential.max_fee_per_gas, 
+			max_priority_fee_per_gas: essential.max_priority_fee_per_gas, 
+			value: essential.value, 
+			chain_id, 
+			access_list: essential.access_list.clone()
 		}
 	}
 }
