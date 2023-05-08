@@ -212,20 +212,36 @@ where
 		if slice.is_empty() {
 			return Err(internal_err("transaction data is empty"));
 		}
+
 		let transaction: ethereum::TransactionV2 = match ethereum::EnvelopedDecodable::decode(slice)
 		{
-			Ok(transaction) => transaction,
+			Ok(transaction) => {
+				let action = match &transaction {
+					ethereum::TransactionV2::Legacy(t) => t.action,
+					ethereum::TransactionV2::EIP2930(t) => t.action,
+					ethereum::TransactionV2::EIP1559(t) => t.action(),
+				};
+
+				if ethereum::TransactionAction::Create == action {
+					transaction
+				} else {
+					let pubkey = match crate::public_key(&transaction) {
+						Ok(pubkey) => pubkey,
+						Err(_) => return Err(internal_err("cannot recover public key")),
+					};
+
+					match transaction.encrypt(|msg, aad| {
+						sp_io::crypto::encrypted(msg, aad.as_fixed_bytes(), &pubkey)
+							.map_err(|_| ethereum::Error::BadEncrypte)
+					}) {
+						Ok(transaction) => transaction,
+						Err(_) => return Err(internal_err("cannot encrypted transaction")),
+					}
+				}
+			}
+
 			Err(_) => return Err(internal_err("decode transaction failed")),
 		};
-
-		let pubkey = match crate::public_key(&transaction) {
-			Ok(pubkey) => pubkey,
-			Err(_) => return Err(internal_err("cannot recover public key")),
-		};
-
-		let transaction = transaction.encrypt(|msg, aad| {
-			sp_io::crypto::encrypted(msg, aad.as_fixed_bytes(), &pubkey).unwrap_or_default()
-		});
 
 		let transaction_hash = transaction.hash();
 
