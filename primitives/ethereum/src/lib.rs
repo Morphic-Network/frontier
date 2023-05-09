@@ -34,6 +34,7 @@ pub enum TransactionValidationError {
 	UnknownError,
 	InvalidChainId,
 	InvalidSignature,
+	InvalidTransactionType,
 	GasLimitTooLow,
 	GasLimitTooHigh,
 	MaxFeePerGasTooLow,
@@ -83,17 +84,17 @@ impl From<TransactionData> for CheckEvmTransactionInput {
 
 impl TransactionData {
 	pub fn convert(chain_id: Option<u64>, essential: &ethereum::TransactionEssentials) -> Self {
-		Self { 
-			action: essential.action, 
-			input: essential.input.clone(), 
-			nonce: essential.nonce.unwrap_or_default(), 
-			gas_limit: essential.gas_limit, 
-			gas_price: essential.gas_price, 
-			max_fee_per_gas: essential.max_fee_per_gas, 
-			max_priority_fee_per_gas: essential.max_priority_fee_per_gas, 
-			value: essential.value, 
-			chain_id, 
-			access_list: essential.access_list.clone()
+		Self {
+			action: essential.action,
+			input: essential.input.clone(),
+			nonce: essential.nonce.unwrap_or_default(),
+			gas_limit: essential.gas_limit,
+			gas_price: essential.gas_price,
+			max_fee_per_gas: essential.max_fee_per_gas,
+			max_priority_fee_per_gas: essential.max_priority_fee_per_gas,
+			value: essential.value,
+			chain_id,
+			access_list: essential.access_list.clone(),
 		}
 	}
 }

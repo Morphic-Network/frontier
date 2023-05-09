@@ -559,6 +559,16 @@ impl<T: Config> Pallet<T> {
 			_ => return Err(InvalidTransaction::Payment.into()),
 		};
 
+		// check transac meet confidentiality requirements
+		if AccountPublic::<T>::contains_key(origin) && transaction.is_universal() {
+			if transaction.action() != ethereum::TransactionAction::Create {
+				return Err(InvalidTransaction::Custom(
+					TransactionValidationError::InvalidTransactionType as u8,
+				)
+				.into());
+			}
+		}
+
 		// The tag provides and requires must be filled correctly according to the nonce.
 		let mut builder = ValidTransactionBuilder::default()
 			.and_provides((origin, transaction_nonce))
@@ -795,6 +805,16 @@ impl<T: Config> Pallet<T> {
 		.and_then(|v| v.with_base_fee())
 		.and_then(|v| v.with_balance_for(&who))
 		.map_err(|e| TransactionValidityError::Invalid(e.0))?;
+
+		// check transac meet confidentiality requirements
+		if AccountPublic::<T>::contains_key(origin) && transaction.is_universal() {
+			if transaction.action() != ethereum::TransactionAction::Create {
+				return Err(InvalidTransaction::Custom(
+					TransactionValidationError::InvalidTransactionType as u8,
+				)
+				.into());
+			}
+		}
 
 		Ok(())
 	}
