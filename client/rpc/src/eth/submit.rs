@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ethereum_types::H256;
+use ethereum_types::{H160, H256};
 use futures::future::TryFutureExt;
 use jsonrpsee::core::RpcResult as Result;
 // Substrate
@@ -212,6 +212,7 @@ where
 		if slice.is_empty() {
 			return Err(internal_err("transaction data is empty"));
 		}
+		let block_hash = self.client.info().best_hash;
 
 		let transaction: ethereum::TransactionV2 = match ethereum::EnvelopedDecodable::decode(slice)
 		{
@@ -230,12 +231,23 @@ where
 						Err(_) => return Err(internal_err("cannot recover public key")),
 					};
 
-					match transaction.encrypt(|msg, aad| {
-						sp_io::crypto::encrypted(msg, aad.as_fixed_bytes(), &pubkey)
-							.map_err(|_| ethereum::Error::BadEncrypte)
-					}) {
-						Ok(transaction) => transaction,
-						Err(_) => return Err(internal_err("cannot encrypted transaction")),
+					let from = H160::from(H256::from(sp_core::keccak_256(&pubkey)));
+
+					if self
+						.client
+						.runtime_api()
+						.has_account_public_key(block_hash, from)
+						.unwrap_or_default()
+					{
+						transaction
+					} else {
+						match transaction.encrypt(|msg, aad| {
+							sp_io::crypto::encrypted(msg, aad.as_fixed_bytes(), &pubkey)
+								.map_err(|_| ethereum::Error::BadEncrypte)
+						}) {
+							Ok(transaction) => transaction,
+							Err(_) => return Err(internal_err("cannot encrypted transaction")),
+						}
 					}
 				}
 			}
@@ -245,7 +257,6 @@ where
 
 		let transaction_hash = transaction.hash();
 
-		let block_hash = self.client.info().best_hash;
 		let api_version = match self
 			.client
 			.runtime_api()

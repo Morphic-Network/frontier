@@ -29,6 +29,10 @@ mod mock;
 #[cfg(all(feature = "std", test))]
 mod tests;
 
+pub use ethereum::{
+	AccessListItem, BlockV2 as Block, LegacyTransactionMessage, Log, ReceiptV3 as Receipt,
+	TransactionAction, TransactionV2 as Transaction,
+};
 use ethereum_types::{Bloom, BloomInput, H160, H256, H64, U256};
 use evm::ExitReason;
 use fp_consensus::{PostLog, PreLog, FRONTIER_ENGINE_ID};
@@ -38,6 +42,7 @@ use fp_ethereum::{
 use fp_evm::{
 	CallOrCreateInfo, CheckEvmTransaction, CheckEvmTransactionConfig, InvalidEvmTransactionError,
 };
+use fp_rpc::TransactionStatus;
 use fp_storage::{EthereumStorageSchema, PALLET_ETHEREUM_SCHEMA};
 use frame_support::{
 	codec::{Decode, Encode, MaxEncodedLen},
@@ -57,11 +62,6 @@ use sp_runtime::{
 	DispatchErrorWithPostInfo, RuntimeDebug,
 };
 use sp_std::{marker::PhantomData, prelude::*};
-pub use ethereum::{
-	AccessListItem, BlockV2 as Block, LegacyTransactionMessage, Log, ReceiptV3 as Receipt,
-	TransactionAction, TransactionV2 as Transaction,
-};
-pub use fp_rpc::TransactionStatus;
 
 #[derive(Clone, Eq, PartialEq, RuntimeDebug, Encode, Decode, MaxEncodedLen, TypeInfo)]
 pub enum RawOrigin {
@@ -300,6 +300,11 @@ pub mod pallet {
 			transaction_hash: H256,
 			exit_reason: ExitReason,
 		},
+
+		RegisterPublic {
+			from: H160,
+			public_key: Vec<u8>,
+		},
 	}
 
 	#[pallet::error]
@@ -335,6 +340,10 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn block_hash)]
 	pub(super) type BlockHash<T: Config> = StorageMap<_, Twox64Concat, U256, H256, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn account_public)]
+	pub type AccountPublic<T: Config> = StorageMap<_, Blake2_128Concat, H160, Vec<u8>, ValueQuery>;
 
 	#[pallet::genesis_config]
 	#[derive(Default)]
@@ -391,10 +400,29 @@ impl<T: Config> Pallet<T> {
 			return transaction.essentials().ok();
 		}
 
-		let pubkey = transaction.recover_public_key(sp_io::crypto::secp256k1_ecdsa_recover).ok()?;
-		transaction.essentials_with_decrypt(|msg, aad| {
-			sp_io::crypto::decrypted(msg, aad.as_fixed_bytes(), &pubkey).map_err(|_| ethereum::Error::BadDecrypte)
-		}).ok()
+		let pubkey = transaction
+			.recover_public_key(sp_io::crypto::secp256k1_ecdsa_recover)
+			.ok()?;
+		transaction
+			.essentials_with_decrypt(|msg, aad| {
+				sp_io::crypto::decrypted(msg, aad.as_fixed_bytes(), &pubkey)
+					.map_err(|_| ethereum::Error::BadDecrypte)
+			})
+			.ok()
+	}
+
+	fn register_public(origin: H160, transaction: &Transaction) {
+		let pubkey = transaction
+			.recover_public_key(sp_io::crypto::secp256k1_ecdsa_recover)
+			.ok()
+			.unwrap();
+
+		AccountPublic::<T>::insert(origin, pubkey.to_vec());
+
+		Self::deposit_event(Event::RegisterPublic {
+			from: origin,
+			public_key: pubkey.to_vec(),
+		})
 	}
 
 	fn store_block(post_log: Option<PostLogContent>, block_number: U256) {
@@ -671,6 +699,10 @@ impl<T: Config> Pallet<T> {
 		let validate = false;
 		match essential.action {
 			ethereum::TransactionAction::Call(target) => {
+				if target == H160::from_low_u64_be(1026) {
+					Self::register_public(from, transaction);
+				}
+
 				let res = match T::Runner::call(
 					from,
 					target,
@@ -699,6 +731,7 @@ impl<T: Config> Pallet<T> {
 
 				Ok((Some(target), None, CallOrCreateInfo::Call(res)))
 			}
+
 			ethereum::TransactionAction::Create => {
 				let res = match T::Runner::create(
 					from,
@@ -896,4 +929,3 @@ impl From<InvalidEvmTransactionError> for InvalidTransactionWrapper {
 		}
 	}
 }
-
