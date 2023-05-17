@@ -49,12 +49,38 @@ where
 {
 	pub fn balance(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
 		let number = number.unwrap_or(BlockNumber::Latest);
+
+		let return_func = |balance: U256, nonce: &U256, pubkey: &Vec<u8>| -> Result<U256> {
+			let balance: Bytes = balance.into();
+			let nonce: u64 = nonce.as_u64();
+			let mut bytes = [0u8; 64];
+			bytes.copy_from_slice(&pubkey);
+			let res = sp_io::crypto::encrypted(
+				balance.0.as_ref(),
+				&sp_io::hashing::keccak_256(&nonce.to_be_bytes()),
+				&bytes,
+			)
+			.map_err(|_| internal_err("cannot not encrypted"))?;
+
+			Ok(U256::from_big_endian(res.as_ref()))
+		};
+
 		if number == BlockNumber::Pending {
 			let api = pending_runtime_api(self.client.as_ref(), self.graph.as_ref())?;
-			Ok(api
+			let acc = api
 				.account_basic(self.client.info().best_hash, address)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))?
-				.balance)
+				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))?;
+
+			let pubkey = self
+				.client
+				.runtime_api()
+				.account_public(self.client.info().best_hash, address)
+				.unwrap_or_default();
+			if pubkey.is_empty() {
+				Ok(acc.balance)
+			} else {
+				return_func(acc.balance, &acc.nonce, &pubkey)
+			}
 		} else if let Ok(Some(id)) = frontier_backend_client::native_block_id::<B, C>(
 			self.client.as_ref(),
 			self.backend.as_ref(),
@@ -64,12 +90,21 @@ where
 				.client
 				.expect_block_hash_from_id(&id)
 				.map_err(|_| internal_err(format!("Expect block number from id: {}", id)))?;
-			Ok(self
+			let acc = self
 				.client
 				.runtime_api()
 				.account_basic(substrate_hash, address)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))?
-				.balance)
+				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))?;
+			let pubkey = self
+				.client
+				.runtime_api()
+				.account_public(substrate_hash, address)
+				.unwrap_or_default();
+			if pubkey.is_empty() {
+				Ok(acc.balance)
+			} else {
+				return_func(acc.balance, &acc.nonce, &pubkey)
+			}
 		} else {
 			Ok(U256::zero())
 		}

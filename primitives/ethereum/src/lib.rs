@@ -35,6 +35,7 @@ pub enum TransactionValidationError {
 	InvalidChainId,
 	InvalidSignature,
 	InvalidTransactionType,
+	BadDecrypte,
 	GasLimitTooLow,
 	GasLimitTooHigh,
 	MaxFeePerGasTooLow,

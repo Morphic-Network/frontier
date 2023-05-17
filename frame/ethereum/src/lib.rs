@@ -512,7 +512,7 @@ impl<T: Config> Pallet<T> {
 		transaction: &Transaction,
 	) -> TransactionValidity {
 		let essential = Self::transact_essential(&transaction).ok_or(
-			InvalidTransaction::Custom(TransactionValidationError::InvalidSignature as u8),
+			InvalidTransaction::Custom(TransactionValidationError::BadDecrypte as u8),
 		)?;
 
 		let transaction_data = TransactionData::convert(transaction.chain_id(), &essential);
@@ -704,7 +704,7 @@ impl<T: Config> Pallet<T> {
 		(Option<H160>, Option<H160>, CallOrCreateInfo),
 		DispatchErrorWithPostInfo<PostDispatchInfo>,
 	> {
-		let essential = Self::transact_essential(&transaction).unwrap();
+		let essential = Self::transact_essential(&transaction).unwrap_or_default();
 		let is_transactional = true;
 		let validate = false;
 		match essential.action {
@@ -782,7 +782,7 @@ impl<T: Config> Pallet<T> {
 		transaction: &Transaction,
 	) -> Result<(), TransactionValidityError> {
 		let essential = Self::transact_essential(&transaction).ok_or(
-			InvalidTransaction::Custom(TransactionValidationError::InvalidSignature as u8),
+			InvalidTransaction::Custom(TransactionValidationError::BadDecrypte as u8),
 		)?;
 
 		let transaction_data = TransactionData::convert(transaction.chain_id(), &essential);
