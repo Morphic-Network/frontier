@@ -176,7 +176,7 @@ pub use self::pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::pallet_prelude::*;
+use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::pallet]
@@ -340,7 +340,7 @@ pub mod pallet {
 
 	// mapping for transaction id and poc.
 	#[pallet::storage]
-	pub type TransactionPoc<T: Config> = StorageMap<_, Twox64Concat, H256, String, ValueQuery>;
+	pub type TransactionPoc<T: Config> = StorageMap<_, Twox64Concat, H256, Vec<u8>, ValueQuery>;
 
 	#[pallet::genesis_config]
 	#[derive(Default)]
@@ -442,7 +442,7 @@ impl<T: Config> Pallet<T> {
 		CurrentReceipts::<T>::put(receipts.clone());
 		CurrentTransactionStatuses::<T>::put(statuses.clone());
 		BlockHash::<T>::insert(block_number, block.header.hash());
-		Self::generate_poc(&transactions);
+		Self::generate_poc(&transactions, &receipts);
 
 		match post_log {
 			Some(PostLogContent::BlockAndTxnHashes) => {
@@ -463,16 +463,18 @@ impl<T: Config> Pallet<T> {
 		}
 	}
 
-	fn generate_poc(transactions: &Vec<Transaction>) {
+	fn generate_poc(transactions: &Vec<Transaction>, receipts: &Vec<Receipt>) {
 		let seed = 0;
-		
 		let private_key = H256::from_slice(&[(seed + 1) as u8; 32]);
-		for transaction in transactions {
+		for (i, transaction) in transactions.iter().enumerate() {
+			let input_hash = tenet_app::TenetApi::generate_input_hash(&transaction);
+			let output_hash = tenet_app::TenetApi::generate_output_hash(&receipts[i]);
 			let poc = fp_poc::generate_poc(
 				private_key,
 				T::ChainId::get(),
-				&vec![fp_poc::IOHash{input_hash: tenet_app::TenetApp::generate_input_hash(transaction), output_hash: H256::zero()}]);
-				TransactionPoc::<T>::insert(transaction.hash(), serde_json::to_string(&poc).unwrap());
+				&vec![fp_poc::IOHash{input_hash, output_hash}]);
+				// log::info!("!!!!!!!!!!!!!!!!!!!!!!!!!!!{}", serde_json::to_string(&poc).unwrap());
+				TransactionPoc::<T>::insert(transaction.hash(), rlp::encode(&poc).encode());
 		}
 	}
 
@@ -492,6 +494,7 @@ impl<T: Config> Pallet<T> {
 		origin: H160,
 		transaction: &Transaction,
 	) -> TransactionValidity {
+		// Self::generate_poc(&vec![transaction.clone()]); // for test
 		let transaction_data: TransactionData = transaction.into();
 		let transaction_nonce = transaction_data.nonce;
 

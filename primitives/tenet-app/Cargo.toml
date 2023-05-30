@@ -8,9 +8,18 @@ edition = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sha3 = "*"
-log = "0.4.17"
-ethereum-types = { workspace = true }
-ethereum = { workspace = true, features = ["with-codec"] }
+ethereum = { workspace = true}
 rlp = { workspace = true }
-fp-poc = { workspace = true }
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-std = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "sp-core/std",
+    "ethereum/std",
+    "rlp/std",
+    "sp-io/std",
+    "sp-std/std",
+]

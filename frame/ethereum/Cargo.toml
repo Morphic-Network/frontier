@@ -17,8 +17,6 @@ evm = { workspace = true, features = ["with-codec"] }
 rlp = { workspace = true }
 scale-codec = { package = "parity-scale-codec", workspace = true }
 scale-info = { workspace = true }
-serde_json = "*"
-getrandom = { version = "0.2", features = ["js"] }
 
 # Substrate
 frame-support = { workspace = true }
@@ -38,7 +36,6 @@ fp-storage = { workspace = true }
 pallet-evm = { workspace = true }
 
 # Tenet
-sha3 = "*"
 fp-poc = { workspace = true }
 tenet-app = { workspace = true }
 
@@ -48,7 +45,6 @@ libsecp256k1 = { workspace = true, features = ["static-context", "hmac"] }
 # Substrate
 pallet-balances = { workspace = true, features = ["default"] }
 sp-core = { workspace = true }
-log = "0.4.17"
 
 [features]
 default = ["std"]
@@ -74,6 +70,9 @@ std = [
 	"fp-self-contained/std",
 	"fp-storage/std",
 	"pallet-evm/std",
+	# Tenet
+	"fp-poc/std",
+	"tenet-app/std",
 ]
 runtime-benchmarks = [
 	"frame-support/runtime-benchmarks",
