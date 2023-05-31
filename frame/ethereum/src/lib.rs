@@ -471,7 +471,6 @@ impl<T: Config> Pallet<T> {
 			let output_hash = tenet_app::TenetApi::generate_output_hash(&receipts[i]);
 			let poc = fp_poc::generate_poc(
 				private_key,
-				T::ChainId::get(),
 				&vec![fp_poc::IOHash{input_hash, output_hash}]);
 				// log::info!("!!!!!!!!!!!!!!!!!!!!!!!!!!!{}", serde_json::to_string(&poc).unwrap());
 				TransactionPoc::<T>::insert(transaction.hash(), rlp::encode(&poc).encode());

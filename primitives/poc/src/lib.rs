@@ -21,7 +21,7 @@ pub struct IOHash {
 	pub output_hash: H256,
 }
 
-pub fn generate_poc(private_key: H256, chain_id: u64, io_list: &Vec<IOHash>) -> PoC {
+pub fn generate_poc(private_key: H256, io_list: &Vec<IOHash>) -> PoC {
 	let root = generate_root(io_list);
 	PoC{
 		io_hash_list: io_list.clone(), 
@@ -30,6 +30,9 @@ pub fn generate_poc(private_key: H256, chain_id: u64, io_list: &Vec<IOHash>) -> 
 }
 
 fn generate_root(io_list: &Vec<IOHash>) -> H256 {
+	if io_list.len() == 0 {
+		return H256::zero();
+	}
 	let mut hash_queue = VecDeque::new();
 	for io in io_list {
 		hash_queue.push_back(io.input_hash);
