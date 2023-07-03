@@ -122,6 +122,10 @@ where
 		})
 	}
 
+	fn current_pocs(&self, block_hash: B::Hash, tx_id: H256) -> Option<Vec<u8>> {
+		None
+	}
+
 	/// Return the current transaction status.
 	fn current_transaction_statuses(&self, block_hash: B::Hash) -> Option<Vec<TransactionStatus>> {
 		self.query_storage::<Vec<TransactionStatus>>(

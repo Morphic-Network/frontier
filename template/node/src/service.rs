@@ -312,6 +312,12 @@ where
 		Some(WarpSyncParams::WithProvider(warp_sync))
 	};
 
+	config.network.layer1_addr = String::from("http://localhost:8545");
+	config.network.network_private_key = String::from("d68043bb07734df1d922ba7f7261e956834c5eb0e8ba32aff8414f470a969f5b");
+	config.network.tenet_service_contract_addr = String::from("0xCec6a23d2555aDCa4313238D5cA865e38D4B2061");
+	config.network.tenet_service_contract_abi_json = include_bytes!("/repo/cloak-service-contract/output/TeeRegService.json").to_vec();
+	config.network.need_remote_attestation = false;
+
 	let (network, system_rpc_tx, tx_handler_controller, network_starter) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &config,

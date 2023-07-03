@@ -22,6 +22,7 @@ sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 # Frontier
 fp-evm = { workspace = true }
+fp-poc = { workspace = true }
 
 [features]
 default = ["std"]

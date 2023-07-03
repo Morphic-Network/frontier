@@ -42,6 +42,7 @@ pub struct OverrideHandle<Block: BlockT> {
 	pub fallback: Box<dyn StorageOverride<Block>>,
 }
 
+
 /// Something that can fetch Ethereum-related data. This trait is quite similar to the runtime API,
 /// and indeed oe implementation of it uses the runtime API.
 /// Having this trait is useful because it allows optimized implementations that fetch data from a
@@ -56,6 +57,8 @@ pub trait StorageOverride<Block: BlockT>: Send + Sync {
 	fn current_block(&self, block_hash: Block::Hash) -> Option<EthereumBlock>;
 	/// Return the current receipt.
 	fn current_receipts(&self, block_hash: Block::Hash) -> Option<Vec<ethereum::ReceiptV3>>;
+	/// Return the current poc.
+	fn current_pocs(&self, block_hash: Block::Hash, tx_id: H256) -> Option<Vec<u8>>;
 	/// Return the current transaction status.
 	fn current_transaction_statuses(
 		&self,
@@ -167,6 +170,16 @@ where
 				.runtime_api()
 				.current_receipts(block_hash)
 				.ok()?
+		}
+	}
+
+	/// Return the current poc.
+	fn current_pocs(&self, block_hash: Block::Hash, tx_id: H256) -> Option<Vec<u8>> {
+		match self.client
+		.runtime_api()
+		.poc_at(block_hash, tx_id) {
+			Ok(poc) => Some(poc),
+			Err(_) => None,
 		}
 	}
 

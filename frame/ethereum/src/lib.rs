@@ -340,6 +340,7 @@ use frame_support::pallet_prelude::*;
 
 	// mapping for transaction id and poc.
 	#[pallet::storage]
+	#[pallet::getter(fn transaction_poc)]
 	pub type TransactionPoc<T: Config> = StorageMap<_, Twox64Concat, H256, Vec<u8>, ValueQuery>;
 
 	#[pallet::genesis_config]
@@ -472,7 +473,6 @@ impl<T: Config> Pallet<T> {
 			let poc = fp_poc::generate_poc(
 				private_key,
 				&vec![fp_poc::IOHash{input_hash, output_hash}]);
-				// log::info!("!!!!!!!!!!!!!!!!!!!!!!!!!!!{}", serde_json::to_string(&poc).unwrap());
 				TransactionPoc::<T>::insert(transaction.hash(), rlp::encode(&poc).encode());
 		}
 	}

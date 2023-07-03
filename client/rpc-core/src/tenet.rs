@@ -20,12 +20,11 @@
 
 use jsonrpsee::{core::RpcResult as Result, proc_macros::rpc};
 use ethereum_types::H256;
-use crate::types::PoC;
 
 /// Net rpc interface.
 #[rpc(server)]
 pub trait TenetApi {
 	/// Returns poc.
 	#[method(name = "tenet_getPoc")]
-	fn get_poc(&self, tx_id: H256) -> Result<PoC>;
+	fn get_poc(&self, tx_id: H256) -> Result<Vec<u8>>;
 }

@@ -649,6 +649,10 @@ impl_runtime_apis! {
 			EVM::account_storages(address, H256::from_slice(&tmp[..]))
 		}
 
+		fn poc_at(tx_id: H256) -> Vec<u8> {
+			Ethereum::transaction_poc(tx_id)
+		}
+
 		fn call(
 			from: H160,
 			to: H160,

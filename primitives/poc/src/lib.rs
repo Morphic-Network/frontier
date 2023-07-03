@@ -1,7 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use sp_std::{vec::Vec, collections::vec_deque::VecDeque};
 use sp_core::{H256, ecdsa::Signature};
-use rlp::{Encodable, RlpStream};
+use rlp::{Encodable, RlpStream, RlpEncodable};
+
 
 #[derive(Clone)]
 pub struct PoC {
@@ -10,12 +11,13 @@ pub struct PoC {
 }
 impl Encodable for PoC {
 	fn rlp_append(&self, s: &mut RlpStream) {
-		// TODO
+		s.append_list(&self.io_hash_list);
+		s.append_list(&self.sign.0);
 	}
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, RlpEncodable)]
 pub struct IOHash {
 	pub input_hash: H256,
 	pub output_hash: H256,

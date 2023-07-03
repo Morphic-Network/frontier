@@ -16,50 +16,87 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use std::sync::Arc;
+use std::{sync::Arc, marker::PhantomData};
 
+use fc_storage::OverrideHandle;
 use jsonrpsee::core::RpcResult as Result;
+use sc_client_api::{StorageProvider, Backend};
 // Substrate
-use sc_network::NetworkService;
-use sc_network_common::{service::NetworkPeers, ExHashT};
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::Block as BlockT;
 // Frontier
-use fc_rpc_core::{types::PoC, TenetApiServer};
 use fp_rpc::EthereumRuntimeRPCApi;
 
 use ethereum_types::H256;
 
-use crate::internal_err;
+use crate::{internal_err, frontier_backend_client, EthBlockDataCacheTask};
 
 /// Tenet API implementation.
-pub struct Tenet<B: BlockT, C, H: ExHashT> {
+pub struct Tenet<B: BlockT, C, BE> {
 	client: Arc<C>,
-	network: Arc<NetworkService<B, H>>,
+	overrides: Arc<OverrideHandle<B>>,
+	backend: Arc<fc_db::Backend<B>>,
+	_marker: PhantomData<BE>,
 }
 
-impl<B: BlockT, C, H: ExHashT> Tenet<B, C, H> {
+impl<B: BlockT, C, BE> Tenet<B, C, BE> {
 	pub fn new(
 		client: Arc<C>,
-		network: Arc<NetworkService<B, H>>,
+		overrides: Arc<OverrideHandle<B>>,
+		backend: Arc<fc_db::Backend<B>>,
 	) -> Self {
 		Self {
 			client,
-			network,
+			overrides,
+			backend,
+			_marker: PhantomData,
 		}
 	}
 }
 
-impl<B, C, H: ExHashT> TenetApiServer for Tenet<B, C, H>
+impl<B, C, BE> Tenet<B, C, BE>
 where
 	B: BlockT,
 	C: ProvideRuntimeApi<B>,
 	C::Api: EthereumRuntimeRPCApi<B>,
-	C: HeaderBackend<B> + 'static,
+	C: HeaderBackend<B> + StorageProvider<B, BE> + 'static,
+	BE: Backend<B> + 'static,
 {
-	fn get_poc(&self, tx_id: H256) -> Result<PoC> {
-		// TransactionPoc::<T>::get(transaction.hash());
-		Ok(PoC{test: true})
+	pub async fn get_poc(&self, tx_id: H256) -> Result<Option<Vec<u8>>> {
+		let client = Arc::clone(&self.client);
+		let overrides = Arc::clone(&self.overrides);
+		let backend = Arc::clone(&self.backend);
+
+		let (hash, index) = match frontier_backend_client::load_transactions::<B, C>(
+			client.as_ref(),
+			backend.as_ref(),
+			tx_id,
+			true,
+		)
+		.map_err(|err| internal_err(format!("{:?}", err)))?
+		{
+			Some((hash, index)) => (hash, index as usize),
+			None => return Ok(None),
+		};
+
+		let substrate_hash = match frontier_backend_client::load_hash::<B, C>(
+			client.as_ref(),
+			backend.as_ref(),
+			hash,
+		)
+		.map_err(|err| internal_err(format!("{:?}", err)))?
+		{
+			Some(hash) => hash,
+			_ => return Ok(None),
+		};
+
+		let schema = fc_storage::onchain_storage_schema(client.as_ref(), substrate_hash);
+		let handler = overrides
+			.schemas
+			.get(&schema)
+			.unwrap_or(&overrides.fallback);
+
+	 Ok(handler.current_pocs(substrate_hash, tx_id))
 	}
 }

@@ -54,6 +54,8 @@ sp_api::decl_runtime_apis! {
 		fn author() -> H160;
 		/// For a given account address and index, returns pallet_evm::AccountStorages.
 		fn storage_at(address: H160, index: U256) -> H256;
+		/// Returns poc.
+		fn poc_at(tx_id: H256) -> Vec<u8>;
 		/// Returns a frame_ethereum::call response. If `estimate` is true,
 		#[changed_in(2)]
 		fn call(
