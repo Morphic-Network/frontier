@@ -371,8 +371,8 @@ where
 								t.gas_price.saturating_sub(base_fee).as_u64()
 							}
 							Some(&ethereum::TransactionV2::EIP1559(ref t)) => t
-								.max_priority_fee_per_gas
-								.min(t.max_fee_per_gas.saturating_sub(base_fee))
+								.max_priority_fee_per_gas()
+								.min(t.max_fee_per_gas().saturating_sub(base_fee))
 								.as_u64(),
 							None => 0,
 						},

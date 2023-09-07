@@ -68,42 +68,44 @@ impl Encodable for TxOutput {
 pub struct TenetApi{}
 impl TenetApi {
 	pub fn generate_input_hash(transaction: &Transaction) -> H256 {
-		let tenet_app_input = match transaction {
-			Transaction::Legacy(t) => TxInput {
-				chain_id: 0,
-				nonce: t.nonce,
-				max_priority_fee_per_gas: U256::zero(),
-				max_fee_per_gas: U256::zero(),
-				value: t.value,
-				input: sp_core::Bytes(t.input.clone()),
-				access_list: Vec::new(),
-				r: H256::zero(),
-				s: H256::zero(),
-			},
-			Transaction::EIP2930(t) => TxInput {
-				chain_id: t.chain_id,
-				nonce: t.nonce,
-				max_priority_fee_per_gas: U256::zero(),
-				max_fee_per_gas: U256::zero(),
-				value: t.value,
-				input: sp_core::Bytes(t.input.clone()),
-				access_list: t.access_list.clone(),
-				r: t.r,
-				s: t.s,
-			},
-			Transaction::EIP1559(t) => TxInput {
-				chain_id: t.chain_id,
-				nonce: t.nonce,
-				max_priority_fee_per_gas: t.max_priority_fee_per_gas,
-				max_fee_per_gas: t.max_fee_per_gas,
-				value: t.value,
-				input: sp_core::Bytes(t.input.clone()),
-				access_list: t.access_list.clone(),
-				r: t.r,
-				s: t.s,
-			},
-		};
-        tenet_app_input.hash()
+		// let tx: TransactionData = transaction.into();
+		// let tenet_app_input = match tx {
+		// 	Transaction::Legacy(t) => TxInput {
+		// 		chain_id: 0,
+		// 		nonce: t.nonce,
+		// 		max_priority_fee_per_gas: U256::zero(),
+		// 		max_fee_per_gas: U256::zero(),
+		// 		value: t.value,
+		// 		input: sp_core::Bytes(t.input.clone()),
+		// 		access_list: Vec::new(),
+		// 		r: H256::zero(),
+		// 		s: H256::zero(),
+		// 	},
+		// 	Transaction::EIP2930(t) => TxInput {
+		// 		chain_id: t.chain_id,
+		// 		nonce: t.nonce,
+		// 		max_priority_fee_per_gas: U256::zero(),
+		// 		max_fee_per_gas: U256::zero(),
+		// 		value: t.value,
+		// 		input: sp_core::Bytes(t.input.clone()),
+		// 		access_list: t.access_list.clone(),
+		// 		r: t.r,
+		// 		s: t.s,
+		// 	},
+		// 	Transaction::EIP1559(t) => TxInput {
+		// 		chain_id: t.chain_id,
+		// 		nonce: t.nonce,
+		// 		max_priority_fee_per_gas: t.max_priority_fee_per_gas,
+		// 		max_fee_per_gas: t.max_fee_per_gas,
+		// 		value: t.value,
+		// 		input: sp_core::Bytes(t.input.clone()),
+		// 		access_list: t.access_list.clone(),
+		// 		r: t.r,
+		// 		s: t.s,
+		// 	},
+		// };
+        // tenet_app_input.hash()
+		transaction.hash()
 	}
 
     pub fn generate_output_hash(receipt: &Receipt) -> H256 {

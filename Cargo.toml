@@ -151,3 +151,4 @@ frontier-template-runtime = { path = "template/runtime", default-features = fals
 
 [patch.crates-io]
 jsonrpsee = { git = "https://github.com/yingjun-wu/jsonrpsee.git", branch = "tls-0.16.2" }
+ethereum = { git = "https://github.com/OxHainan/ethereum.git", branch = "tenet"}

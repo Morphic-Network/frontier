@@ -639,6 +639,14 @@ impl_runtime_apis! {
 			EVM::account_codes(address)
 		}
 
+		fn has_account_public_key(address: H160) -> bool {
+			Ethereum::account_public(address).is_empty()
+		}
+
+		fn account_public(address: H160) -> Vec<u8> {
+			Ethereum::account_public(address)
+		}
+
 		fn author() -> H160 {
 			<pallet_evm::Pallet<Runtime>>::find_author()
 		}

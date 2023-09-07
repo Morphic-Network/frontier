@@ -41,6 +41,10 @@ impl Geth {
 					VError::UnknownError => "unknown error".into(),
 					VError::InvalidChainId => "invalid chain id".into(),
 					VError::InvalidSignature => "invalid sender".into(),
+					VError::InvalidTransactionType => {
+						"invalid transaction type (universal or confidential".into()
+					}
+					VError::BadDecrypte => "transaction decrypted failed".into(),
 					VError::GasLimitTooLow => "intrinsic gas too low".into(),
 					VError::GasLimitTooHigh => "exceeds block gas limit".into(),
 					VError::MaxFeePerGasTooLow => {

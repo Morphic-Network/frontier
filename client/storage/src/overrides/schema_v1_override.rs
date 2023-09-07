@@ -123,7 +123,7 @@ where
 		})
 	}
 
-	fn current_pocs(&self, block_hash: B::Hash, tx_id: H256) -> Option<Vec<u8>> {
+	fn current_pocs(&self, _block_hash: B::Hash, _tx_id: H256) -> Option<Vec<u8>> {
 		None
 	}
 

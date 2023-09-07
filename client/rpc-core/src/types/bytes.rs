@@ -18,6 +18,7 @@
 
 //! Serializable wrapper around vector of bytes
 
+use ethereum_types::U256;
 use rustc_hex::{FromHex, ToHex};
 use serde::{
 	de::{Error, Visitor},
@@ -43,6 +44,14 @@ impl Bytes {
 impl From<Vec<u8>> for Bytes {
 	fn from(bytes: Vec<u8>) -> Bytes {
 		Bytes(bytes)
+	}
+}
+
+impl From<U256> for Bytes {
+	fn from(value: U256) -> Self {
+		let mut bytes = [0u8; 32];
+		value.to_big_endian(&mut bytes);
+		Bytes(bytes[value.leading_zeros() as usize / 8..].to_vec())
 	}
 }
 
