@@ -20,7 +20,10 @@ parity-db = { workspace = true }
 parking_lot = { workspace = true }
 scale-codec = { package = "parity-scale-codec", workspace = true }
 smallvec = { version = "1.11", optional = true }
-sqlx = { workspace = true, features = ["runtime-tokio-native-tls", "sqlite"], optional = true }
+sqlx = { workspace = true, features = [
+	"runtime-tokio-native-tls",
+	"sqlite",
+], optional = true }
 tokio = { workspace = true, features = ["macros", "sync"], optional = true }
 # Substrate
 sc-client-api = { workspace = true, optional = true }
@@ -45,15 +48,11 @@ tempfile = "3.8.0"
 # Substrate
 sc-block-builder = { workspace = true }
 sp-consensus = { workspace = true }
-substrate-test-runtime-client = { workspace = true }
+# substrate-test-runtime-client = { workspace = true }
 
 [features]
 default = ["rocksdb"]
-rocksdb = [
-	"kvdb-rocksdb",
-	"sc-client-db/rocksdb",
-	"smallvec",
-]
+rocksdb = ["kvdb-rocksdb", "sc-client-db/rocksdb", "smallvec"]
 sql = [
 	"ethereum",
 	"futures",
